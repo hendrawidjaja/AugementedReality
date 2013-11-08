@@ -1,0 +1,95 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/RelativeLayout1"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:background="#333333"
+	android:columnCount="1"
+	tools:context=".MyMainActivity" >	
+	<fragment
+		android:id="@+id/MyMap"
+		class="com.google.android.gms.maps.SupportMapFragment"
+		android:layout_width="wrap_content"
+		android:layout_height="355dp"
+		android:layout_marginTop="37dp"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentTop="true" />
+	<Button
+		android:id="@+id/refreshButton"
+		android:layout_width="wrap_content"
+		android:layout_height="38dp"
+		android:layout_below="@+id/MyMap"
+		android:layout_toLeftOf="@+id/pinPointButton"
+		android:text="Refresh" />
+	<Button
+		android:id="@+id/pinPointButton"
+		android:layout_width="wrap_content"
+		android:layout_height="38dp"
+		android:layout_below="@+id/MyMap"
+		android:layout_centerHorizontal="true"
+		android:text="Pin Point" />
+	<Button
+		android:id="@+id/deleteButton"
+		android:layout_width="wrap_content"
+		android:layout_height="38dp"
+		android:layout_below="@+id/MyMap"
+		android:layout_toRightOf="@+id/pinPointButton"
+		android:text="Delete" />	
+	<TextView
+		android:id="@+id/textLat"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignLeft="@+id/radBar"
+		android:layout_below="@+id/MyMap"
+		android:layout_marginTop="33dp"
+		android:text="Latitude "
+		android:textAppearance="?android:attr/textAppearanceSmall" />
+	<TextView
+		android:id="@+id/textResLat"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignBaseline="@+id/textLat"
+		android:layout_alignBottom="@+id/textLat"
+		android:layout_toRightOf="@+id/textLat"
+		
+		android:textAppearance="?android:attr/textAppearanceSmall" />
+	<TextView
+		android:id="@+id/textLong"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/textLat"
+		android:layout_toLeftOf="@+id/textResLat"
+		android:text="Longitude "
+		android:textAppearance="?android:attr/textAppearanceSmall" />
+	<TextView
+		android:id="@+id/textResLong"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignLeft="@+id/textResLat"
+		android:layout_below="@+id/textResLat"
+		android:text="unknown"
+		android:textAppearance="?android:attr/textAppearanceSmall" />
+	<TextView
+		android:id="@+id/textAccr"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/textLong"
+		android:layout_toLeftOf="@+id/textResLong"
+		android:text="Accuracy "
+		android:textAppearance="?android:attr/textAppearanceSmall" />	
+	<TextView
+		android:id="@+id/textResAccr"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignLeft="@+id/textResLat"
+		android:layout_below="@+id/textResLong"
+		android:text="unknown"
+		android:textAppearance="?android:attr/textAppearanceSmall" />
+	<SeekBar
+		android:id="@+id/radBar"
+		android:layout_width="180dp"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/textLong"
+		android:layout_centerHorizontal="true"
+		android:layout_marginTop="13dp" />
+</RelativeLayout>
