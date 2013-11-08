@@ -44,7 +44,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-@SuppressWarnings("unused")
 public class MyMainActivity extends FragmentActivity implements LocationListener, LoaderCallbacks<Cursor> {
 	
 	private static final long MIN_DISTANCE = 25; 		// in Meters
@@ -127,7 +126,7 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 				// Storing the latitude, longitude and zoom level to SQLite database
 				insertTask.execute(contentValues);   
 	
-//		        Toast.makeText(getBaseContext(), "Marker is added to the Map", Toast.LENGTH_SHORT).show();	
+		        Toast.makeText(getBaseContext(), "Marker is added to the Map", Toast.LENGTH_SHORT).show();	
 			}
 		});
          
@@ -152,8 +151,7 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 			
 			public void onStartTrackingTouch(SeekBar seekBar) { }
 			
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				googleMap.clear();
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {			
 				marker = googleMap.addMarker(new MarkerOptions().position(latlng));
 				googleMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
 				googleMap.animateCamera(CameraUpdateFactory.zoomTo(CAMERA_ZOOM_FACTOR));
@@ -282,7 +280,6 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
       
       	googleMapInitiliaze();
       	radSeekBarInitiliaze();
-//        db = new MySQLiteHelper(this);
      }
  
     protected void googleMapInitiliaze() {
@@ -332,14 +329,14 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 		catch (Exception e) {
 			Log.d(getPackageName(), "" + e);
 		}
-		googleMap.clear();
+		
 		latlng = new LatLng(latitude, longitude);
 	
 		if (marker != null){
              marker.remove();
          }
 
-		marker = googleMap.addMarker(new MarkerOptions().position(latlng));
+//		marker = googleMap.addMarker(new MarkerOptions().position(latlng));
 		googleMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
 		googleMap.animateCamera(CameraUpdateFactory.zoomTo(CAMERA_ZOOM_FACTOR));
 		
@@ -372,15 +369,8 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 		 finish();
 	}
 
-
-
-
-
-
 	@Override
 	public void onLoadFinished(Loader<Cursor> arg0, Cursor arg1) {
-		// TODO Auto-generated method stub
-		
 		int locationCount = 0;
 		double lat=0;
 		double lng=0;
@@ -392,7 +382,7 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 		// Move the current record pointer to the first row of the table
 		arg1.moveToFirst();
 		
-		for(int i=0;i<locationCount;i++){
+		for (int i = 0; i < locationCount; i++){
 			
 			// Get the latitude
 			lat = arg1.getDouble(arg1.getColumnIndex(LocationsDB.FIELD_LAT));
@@ -413,24 +403,15 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 			arg1.moveToNext();
 		}
 		
-		if(locationCount>0){
+		if (locationCount > 0) {
 			// Moving CameraPosition to last clicked position
 	        googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(lat,lng)));
 	        
 	        // Setting the zoom level in the map on last position  is clicked
             googleMap.animateCamera(CameraUpdateFactory.zoomTo(zoom));  
-		}    
-			
+		}    			
 	}
-
-
-
-
-
 
 	@Override
-	public void onLoaderReset(Loader<Cursor> arg0) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void onLoaderReset(Loader<Cursor> arg0) { }
 }
