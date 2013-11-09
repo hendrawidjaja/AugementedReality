@@ -1,19 +1,17 @@
 package com.widjaja.hendra.geolocation;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
-import android.location.Address;
 import android.location.Criteria;
-import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -24,16 +22,19 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.text.TextPaint;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -44,17 +45,18 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MyMainActivity extends FragmentActivity implements LocationListener, LoaderCallbacks<Cursor> {
+@SuppressLint("InlinedApi") public class MyMainActivity extends FragmentActivity implements LocationListener, LoaderCallbacks<Cursor>, GooglePlayServicesClient.ConnectionCallbacks,
+GooglePlayServicesClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 	
-	private static final long MIN_DISTANCE = 25; 		// in Meters
-	private static final long MIN_TIME = 1000; 			// in Milliseconds
+	private static final long MIN_DISTANCE = 20; 		// in Meters
+	private static final long MIN_TIME = 3000; 			// in Milliseconds
 	private static final int CAMERA_ZOOM_FACTOR = 19;
 	
 	private GoogleMap googleMap;
-	private Geocoder geocoder;
 	private Criteria criteria;
 	private Location location;
 	private LocationManager locManager;
+	private Marker marker;
 	private TextView textResLat;	
 	private TextView textResLong;
 	private TextView textResAccr;
@@ -63,12 +65,14 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 	private Button pinPointButton;
 	private Button deleteButton;
 	private LatLng latlng;
-	private Marker marker;
 	private Canvas canvas;
 	private Paint paint;	
-	private TextPaint paintText;
 	private BitmapDescriptor bmpDesc;
 	private Bitmap bitmap;
+	private GroundOverlayOptions gOverlayOpt;
+	private List<GroundOverlayOptions> listOfGroundOverlay;
+	private LocationsDB locsDB;
+	private LocationStorage locStore;
 	
 	private String provider;
 	private double latitude, longitude;
@@ -78,9 +82,11 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_my_main);
-        locManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-  
+        locManager = (LocationManager) getSystemService(Service.LOCATION_SERVICE);
+       
         initialize();
         
         // Invoke LoaderCallbacks to retrieve and draw already saved locations in map
@@ -92,7 +98,6 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
         		try {
 				locManager = (LocationManager) getSystemService(Service.LOCATION_SERVICE);
 				location = locManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-					
 				latitude = location.getLatitude();
 				longitude = location.getLongitude();
 				accuracy = location.getAccuracy();
@@ -105,6 +110,7 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 			@Override
 			public void onClick(View v) {
 
+				if ((latitude != 0) && (longitude != 0)) {
 				// Drawing marker on the map
 				drawMarker(latlng);
 				
@@ -126,7 +132,11 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 				// Storing the latitude, longitude and zoom level to SQLite database
 				insertTask.execute(contentValues);   
 	
-		        Toast.makeText(getBaseContext(), "Marker is added to the Map", Toast.LENGTH_SHORT).show();	
+		        Toast.makeText(getBaseContext(), "Marker is added to the Map", Toast.LENGTH_SHORT).show();
+				}
+				else {
+					Toast.makeText(getBaseContext(), "Please wait, try to lock the satellite", Toast.LENGTH_SHORT).show();
+				}
 			}
 		});
          
@@ -144,9 +154,14 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 			}
 		});
         
-        radSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {			
-			public void onStopTrackingTouch(SeekBar seekBar) {
-				radSeekBar.setSecondaryProgress(seekBar.getProgress());			
+        bitmap = Bitmap.createBitmap(200, 200, Config.ARGB_8888);
+        canvas = new Canvas(bitmap);
+        paint  = new Paint();
+        
+        radSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {	
+ 			public void onStopTrackingTouch(SeekBar seekBar) {
+ 				Log.d("Saved: ", "" + canvas.getSaveCount());
+				radSeekBar.setSecondaryProgress(seekBar.getProgress());				
 			}
 			
 			public void onStartTrackingTouch(SeekBar seekBar) { }
@@ -155,13 +170,14 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 				marker = googleMap.addMarker(new MarkerOptions().position(latlng));
 				googleMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
 				googleMap.animateCamera(CameraUpdateFactory.zoomTo(CAMERA_ZOOM_FACTOR));
-				drawRadiusCircle(progress);
-				radius = progress;				
+				radius = progress;
+				
+				drawRadiusCircle(progress);						
 			}
 		});
-    }
+	}
 
-	private void drawMarker(LatLng point){
+	private void drawMarker(LatLng point) {
     	// Creating an instance of MarkerOptions
     	MarkerOptions markerOptions = new MarkerOptions();					
     		
@@ -202,26 +218,19 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
         return new CursorLoader(this, uri, null, null, null, null);
 	}	
 	
-	
 	private void drawRadiusCircle(int radius) {
-		paintText = new TextPaint();
         int radiusMDouble = radius * 2;
         int d = 200; // diameter 
         int dHalf = (d / 2);
         
-        bitmap = Bitmap.createBitmap(d, d, Config.ARGB_8888);
-        canvas = new Canvas(bitmap);
-        paint  = new Paint();
         paint.setColor(getResources().getColor(R.color.black_overlay));
         canvas.drawCircle(dHalf, dHalf, dHalf, paint);
-        
-        paint.setColor(Color.RED); 
-        paint.setTextSize(20); 
-        canvas.drawText("T", dHalf, dHalf, paint);        
-
+       
         bmpDesc = BitmapDescriptorFactory.fromBitmap(bitmap);
-        googleMap.addGroundOverlay(new GroundOverlayOptions().image(bmpDesc).position(latlng, radiusMDouble, radiusMDouble).transparency(0.4f));
-        googleMap.getUiSettings().setCompassEnabled(true);
+        gOverlayOpt = new GroundOverlayOptions().image(bmpDesc).position(latlng, radiusMDouble, radiusMDouble).transparency(0.4f);
+        listOfGroundOverlay = new ArrayList<GroundOverlayOptions>();
+        listOfGroundOverlay.add(gOverlayOpt);
+        googleMap.addGroundOverlay(gOverlayOpt);
     }
 	
     protected void initialize() {
@@ -237,42 +246,31 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
     	criteria.setAccuracy(Criteria.ACCURACY_FINE);
         criteria.setCostAllowed(true);
         criteria.setPowerRequirement(Criteria.POWER_LOW);
-//        criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
-//        criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);  
+        criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
+        criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);  
      
         locManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         provider = locManager.getBestProvider(criteria, false);
-        
+      
         /* 
          * My Location Manager Guard
          * If getLastKnownLocation returns Null, call Telkom, Ask Them to turn on the GPS service
          * 
          */
         try {
+        // Request the location, once it got connected
         locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME, MIN_DISTANCE, MyMainActivity.this);
-      	location = locManager.getLastKnownLocation(provider);
-
-      	if (location == null) {
-            Toast.makeText(getApplicationContext(),"Location Not found",Toast.LENGTH_SHORT).show();
-         } else {
-           geocoder = new Geocoder(getApplicationContext());
-           try {
-        	   List<Address> user = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-               latitude = user.get(0).getLatitude();
-               longitude = user.get(0).getLongitude();
-           }
-           catch (Exception e) {
-        	  Log.d(getPackageName(), "" + e);
-           }
-           
-            latitude = location.getLatitude();
-       		longitude = location.getLongitude();
-       		accuracy = location.getAccuracy();
-       		textResLat.setText("" + latitude );
-       		textResLong.setText("" + longitude );
-       		textResAccr.setText("" + accuracy);
-       		latlng = new LatLng(latitude, longitude);     
-        }
+        location = locManager.getLastKnownLocation(provider);
+ 
+        // This value would be filled
+        latitude = location.getLatitude();
+       	longitude = location.getLongitude();
+       	accuracy = location.getAccuracy();
+      	textResLat.setText("" + latitude );
+       	textResLong.setText("" + longitude );
+       	textResAccr.setText("" + accuracy);
+       	latlng = new LatLng(latitude, longitude);     
+        	
         } 
         catch (Exception e) {
         	Log.d(getPackageName(), "" + e);
@@ -306,6 +304,7 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
       	 */
       	radSeekBar.setProgress(0);
       	radSeekBar.setMax(10);
+      	radius = 0;
     }   
    
 	@Override
@@ -334,7 +333,7 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 	
 		if (marker != null){
              marker.remove();
-         }
+       }
 
 //		marker = googleMap.addMarker(new MarkerOptions().position(latlng));
 		googleMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
@@ -346,35 +345,11 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 	}
 	
 	@Override
-	public void onProviderDisabled(String provider) { }
-
-	@Override
-	public void onProviderEnabled(String provider) { }
-
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras) { }	
-	
-	@Override
-	public void onBackPressed()
-	{
-		 try
-		 {           
-		     locManager.removeUpdates(this);
-		     locManager = null;
-		 }
-		 catch(Exception e) {
-			 Log.d(getPackageName(), "" + e);
-		 }
-		 setResult(0);
-		 finish();
-	}
-
-	@Override
 	public void onLoadFinished(Loader<Cursor> arg0, Cursor arg1) {
 		int locationCount = 0;
-		double lat=0;
-		double lng=0;
-		float zoom=0;
+		double lat = 0;
+		double lng = 0;
+		float zoom = 0;
 		
 		// Number of locations available in the SQLite database table
 		locationCount = arg1.getCount();
@@ -413,5 +388,38 @@ public class MyMainActivity extends FragmentActivity implements LocationListener
 	}
 
 	@Override
+	public void onProviderDisabled(String provider) { }
+
+	@Override
+	public void onProviderEnabled(String provider) { }
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) { }	
+	
+	@Override
 	public void onLoaderReset(Loader<Cursor> arg0) { }
+
+	@Override
+	public void onConnectionFailed(ConnectionResult result) { }
+	 
+	@Override
+	public void onConnected(Bundle connectionHint) { }
+
+	@Override
+	public void onDisconnected() { }
+	
+	@Override
+	public void onBackPressed()
+	{
+		 try
+		 {           
+		     locManager.removeUpdates(this);
+		     locManager = null;
+		 }
+		 catch(Exception e) {
+			 Log.d(getPackageName(), "" + e);
+		 }
+		 setResult(0);
+		 finish();
+	}
 }
