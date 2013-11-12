@@ -68,6 +68,10 @@ public class LocationsContentProvider extends ContentProvider{
 		return cnt;
 	}
 	
+	public String view() {
+		return null;
+	}
+	
 	/** A callback method which is invoked by default content uri */
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {	

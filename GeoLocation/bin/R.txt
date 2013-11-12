@@ -58,7 +58,6 @@ int drawable ic_plusone_medium_off_client 0x7f020019
 int drawable ic_plusone_small_off_client 0x7f02001a
 int drawable ic_plusone_standard_off_client 0x7f02001b
 int drawable ic_plusone_tall_off_client 0x7f02001c
-int drawable image_compass 0x7f02001d
 int id MyMap 0x7f050006
 int id RelativeLayout1 0x7f050005
 int id action_settings 0x7f050011
@@ -77,8 +76,7 @@ int id textLong 0x7f05000d
 int id textResAccr 0x7f050010
 int id textResLat 0x7f05000c
 int id textResLong 0x7f05000e
-int layout activity_dbcontroller 0x7f030000
-int layout activity_my_main 0x7f030001
+int layout activity_my_main 0x7f030000
 int menu dbcontroller 0x7f090000
 int menu menu 0x7f090001
 int string action_settings 0x7f06001d
@@ -112,6 +110,7 @@ int string dummy_button 0x7f06001a
 int string dummy_content 0x7f06001b
 int string hello_world 0x7f06001e
 int string title_activity_dbcontroller 0x7f06001c
+int string title_activity_splash_screen 0x7f06001f
 int style AppBaseTheme 0x7f080000
 int style AppTheme 0x7f080001
 int style ButtonBar 0x7f080003
