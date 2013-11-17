@@ -39,13 +39,6 @@
 		<meta-data
 			android:name="com.google.android.maps.v2.API_KEY"
 			android:value="AIzaSyDlxU3V3FvanbkwPIJJMZ5ooTG3jOLzh4w" />
-		<provider
-			android:name="com.widjaja.hendra.geolocation.LocationsContentProvider"
-			android:authorities="com.widjaja.hendra.geolocation"
-			android:exported="false" />
-		<activity
-			android:name="com.widjaja.hendra.geolocation.DBController"
-			android:label="@string/title_activity_dbcontroller" >
-		</activity>
+	
 	</application>
 </manifest>

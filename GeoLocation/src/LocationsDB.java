@@ -1,4 +1,4 @@
-package com.widjaja.hendra.geolocation;
+
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -73,27 +73,6 @@ public class LocationsDB extends SQLiteOpenHelper{
 	/** Returns all the locations from the table */
 	public Cursor getAllLocations(){
         return mDB.query(DATABASE_TABLE, new String[] { FIELD_ROW_ID,  FIELD_LAT , FIELD_LNG, FIELD_ZOOM } , null, null, null, null, null); 
-	}
-	
-	public void LLat() throws SQLException {
-		String query = "SELECT * FROM DATABASE_TABLE WHERE FIELD_LAT='lat'";
-		ResultSet resSet = null;
-		LocationStorage locStore = null;
-		
-		// Try to open database
-		try {
-			resSet = statement.executeQuery(query);
-			if (resSet.next()) {
-				locStore = new LocationStorage();
-				locStore.setID(resSet.getString("_id"));
-				locStore.setLatitude(resSet.getString("lat"));
-				locStore.setLongitude(resSet.getString("lng"));
-				locStore.setZoom(resSet.getString("zom"));
-			}
-		} finally {
-			mDB.close();
-		}
-		
 	}
 	
 	@Override

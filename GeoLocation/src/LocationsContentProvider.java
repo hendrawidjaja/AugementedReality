@@ -1,6 +1,6 @@
-package com.widjaja.hendra.geolocation;
 
 import java.sql.SQLException;
+
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -41,9 +41,9 @@ public class LocationsContentProvider extends ContentProvider{
 	public Uri insert(Uri uri, ContentValues values) {
 		long rowID = mLocationsDB.insert(values);
 		Uri _uri=null;
-		if(rowID>0){
+		if (rowID > 0) {
 			_uri = ContentUris.withAppendedId(CONTENT_URI, rowID);
-		}else {		
+		} else {		
 			try {
 				throw new SQLException("Failed to insert: " + uri);
 			} catch (SQLException e) {
@@ -54,9 +54,7 @@ public class LocationsContentProvider extends ContentProvider{
 	}
 	
 	@Override
-	public int update(Uri uri, ContentValues values, String selection,
-			String[] selectionArgs) {
-		// TODO Auto-generated method stub
+	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		return 0;
 	}
 
@@ -86,6 +84,4 @@ public class LocationsContentProvider extends ContentProvider{
 	public String getType(Uri uri) {		
 		return null;
 	}	
-	
-	
 }
